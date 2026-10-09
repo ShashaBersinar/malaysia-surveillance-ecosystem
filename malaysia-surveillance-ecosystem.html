@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Malaysian Surveillance Ecosystem — Legislative Map</title>
+<style>
+  :root {
+    --bg:        #F7F5F0;
+    --bg2:       #EFECE5;
+    --bg3:       #E6E2D8;
+    --border:    #D4CFBF;
+    --border2:   #B8B2A0;
+    --text:      #1A1814;
+    --text2:     #4A4740;
+    --text3:     #7A7670;
+    --shadow:    rgba(0,0,0,0.10);
+
+    --sc: #5B52C8;   /* security */
+    --cc: #C0441A;   /* comms */
+    --cy: #0E7A5A;   /* cyber/data */
+    --lw: #9A620A;   /* civil law */
+    --ch: #0D5C42;   /* child */
+    --sy: #7A2448;   /* syariah */
+    --in: #1050A0;   /* infra */
+    --mg: #4E7A10;   /* media */
+    --im: #C0282A;   /* impact */
+    --gap:#A04010;   /* intl gap */
+    --rat:#1A6640;   /* intl ratified */
+    --hub:#1A1814;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Georgia', 'Times New Roman', serif;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--text);
+    color: var(--bg);
+    padding: 28px 40px 24px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  header h1 {
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    line-height: 1.3;
+  }
+  header h1 em {
+    font-style: normal;
+    opacity: 0.55;
+    font-size: 13px;
+    display: block;
+    margin-top: 4px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .header-meta {
+    font-size: 11px;
+    opacity: 0.5;
+    text-align: right;
+    line-height: 1.7;
+    font-family: 'Courier New', monospace;
+  }
+
+  /* ── CONTROLS ── */
+  .controls {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 40px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .controls-label {
+    font-size: 10px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-right: 4px;
+  }
+  .tab {
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+    padding: 4px 12px;
+    border-radius: 2px;
+    border: 1px solid var(--border2);
+    cursor: pointer;
+    color: var(--text2);
+    background: var(--bg);
+    transition: all .15s;
+    letter-spacing: 0.03em;
+  }
+  .tab:hover { border-color: var(--text2); }
+  .tab.on {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    min-height: calc(100vh - 120px);
+  }
+
+  /* ── BOARD ── */
+  .board-wrap {
+    position: relative;
+    padding: 0;
+    overflow: hidden;
+  }
+  #board {
+    width: 100%;
+    position: relative;
+  }
+  canvas#threads {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
+
+  /* ── NODES ── */
+  .pn {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    user-select: none;
+    text-align: center;
+    z-index: 2;
+  }
+  .pn .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    margin: 0 auto 3px;
+    flex-shrink: 0;
+  }
+  .pn .lbl {
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 3px 6px;
+    white-space: pre-line;
+    line-height: 1.35;
+    display: block;
+    transition: border-color .12s, background .12s, box-shadow .12s;
+    letter-spacing: 0.01em;
+  }
+  .pn:hover .lbl {
+    background: var(--bg2);
+    box-shadow: 0 2px 8px var(--shadow);
+    z-index: 10;
+  }
+  .pn.active .lbl {
+    border-width: 2px;
+    box-shadow: 0 3px 12px var(--shadow);
+  }
+  .pn.hub .lbl {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 8px 14px;
+    text-transform: uppercase;
+  }
+  .pn.hub .dot { width: 9px; height: 9px; margin-bottom: 5px; }
+  .pn.impact .lbl { font-size: 9.5px; font-style: italic; }
+
+  /* ── CATEGORY LABELS ── */
+  .cat-lbl {
+    position: absolute;
+    font-family: 'Courier New', monospace;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    z-index: 1;
+    opacity: 0.7;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    background: var(--bg2);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-header {
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Courier New', monospace;
+    font-size: 9px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+  .sidebar-empty {
+    padding: 24px 20px;
+    font-size: 12px;
+    color: var(--text3);
+    line-height: 1.7;
+    font-style: italic;
+  }
+  .sidebar-content { display: none; flex-direction: column; height: 100%; }
+  .sidebar-content.vis { display: flex; }
+  .sidebar-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+    padding: 18px 20px 4px;
+  }
+  .sidebar-year {
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    padding: 0 20px 14px;
+    letter-spacing: 0.03em;
+  }
+  .sidebar-section {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+  }
+  .sidebar-section-label {
+    font-family: 'Courier New', monospace;
+    font-size: 8.5px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 7px;
+  }
+  .sidebar-body {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.7;
+  }
+  .sidebar-note {
+    margin: 0 20px;
+    padding: 9px 12px;
+    border-radius: 2px;
+    font-size: 11px;
+    line-height: 1.6;
+    border-left: 3px solid;
+  }
+  .tags-wrap {
+    padding: 10px 20px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .tag {
+    font-family: 'Courier New', monospace;
+    font-size: 9.5px;
+    padding: 2px 7px;
+    border-radius: 1px;
+    border: 1px solid;
+  }
+  .sidebar-close {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    color: var(--text3);
+    padding: 10px 20px;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+    text-align: right;
+    letter-spacing: 0.05em;
+  }
+  .sidebar-close:hover { color: var(--text); }
+
+  /* ── LEGEND ── */
+  .legend {
+    padding: 16px 40px 14px;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    align-items: center;
+  }
+  .leg-label {
+    font-family: 'Courier New', monospace;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-right: 4px;
+  }
+  .li {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    color: var(--text2);
+  }
+  .ld {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--text);
+    color: var(--bg);
+    padding: 16px 40px;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    opacity: 0.7;
+    letter-spacing: 0.03em;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    .sidebar { border-left: none; border-top: 1px solid var(--border); max-height: 400px; overflow-y: auto; }
+    header { padding: 20px 20px 16px; }
+    .controls { padding: 12px 20px; }
+    .legend { padding: 14px 20px 12px; }
+    footer { padding: 14px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>
+    Malaysian Surveillance Ecosystem
+    <em>Legislative &amp; Institutional Map · Sinar Project Research · 2026</em>
+  </h1>
+  <div class="header-meta">
+    Click any node to explore<br>
+    Use filters to isolate layers<br>
+    Threads show connections
+  </div>
+</header>
+
+<div class="controls">
+  <span class="controls-label">Layer —</span>
+  <span class="tab on"  onclick="setView('all',this)">All layers</span>
+  <span class="tab" onclick="setView('security',this)">Security &amp; law</span>
+  <span class="tab" onclick="setView('infra',this)">Data infrastructure</span>
+  <span class="tab" onclick="setView('syariah',this)">Syariah track</span>
+  <span class="tab" onclick="setView('media',this)">Media &amp; content</span>
+  <span class="tab" onclick="setView('intl',this)">International gaps</span>
+</div>
+
+<div class="main">
+  <div class="board-wrap">
+    <div id="board">
+      <canvas id="threads"></canvas>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="sidebar-header">Node detail</div>
+    <div class="sidebar-empty" id="sidebar-empty">
+      Select any node on the map to see its description, legal provisions, and human rights implications.
+      <br><br>
+      Threads highlight all connected nodes when a node is active.
+    </div>
+    <div class="sidebar-content" id="sidebar-content">
+      <div class="sidebar-name" id="s-name"></div>
+      <div class="sidebar-year" id="s-year"></div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Description</div>
+        <div class="sidebar-body" id="s-body"></div>
+      </div>
+      <div class="sidebar-note" id="s-note" style="display:none"></div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Key provisions &amp; tags</div>
+      </div>
+      <div class="tags-wrap" id="s-tags"></div>
+      <div class="sidebar-close" onclick="closeD()">✕ Close</div>
+    </div>
+  </div>
+</div>
+
+<div class="legend">
+  <span class="leg-label">Layers —</span>
+  <span class="li"><span class="ld" style="background:var(--sc)"></span>Security actors</span>
+  <span class="li"><span class="ld" style="background:var(--cc)"></span>Comms actors</span>
+  <span class="li"><span class="ld" style="background:var(--cy)"></span>Cyber / data actors</span>
+  <span class="li"><span class="ld" style="background:var(--lw)"></span>Civil legislation</span>
+  <span class="li"><span class="ld" style="background:var(--ch)"></span>Child protection</span>
+  <span class="li"><span class="ld" style="background:var(--sy)"></span>Syariah / religious</span>
+  <span class="li"><span class="ld" style="background:var(--in)"></span>State data infrastructure</span>
+  <span class="li"><span class="ld" style="background:var(--mg)"></span>Media governance</span>
+  <span class="li"><span class="ld" style="background:transparent;border:1.5px dotted var(--gap)"></span>Not ratified (intl gap)</span>
+  <span class="li"><span class="ld" style="background:transparent;border:1.5px solid var(--rat)"></span>Ratified w/ reservations</span>
+  <span class="li"><span class="ld" style="background:transparent;border:1.5px dashed var(--im)"></span>Human rights impacts</span>
+</div>
+
+<footer>
+  <span>Malaysian Surveillance Ecosystem · Sinar Project · 2026</span>
+  <span>Research infographic — for advocacy and education use</span>
+</footer>
+
+<script>
+const C = {
+  sc:'#5B52C8', cc:'#C0441A', cy:'#0E7A5A', lw:'#9A620A',
+  ch:'#0D5C42', sy:'#7A2448', in_:'#1050A0', mg:'#4E7A10',
+  im:'#C0282A', gap:'#A04010', rat:'#1A6640', hub:'#1A1814'
+};
+
+const NODES = [
+  // HUB
+  {id:'hub', label:'MALAYSIAN\nSURVEILLANCE\nECOSYSTEM', layer:'hub', ax:.50, ay:.36, col:C.hub,
+   views:['all','security','infra','syariah','media','intl'],
+   name:'Malaysian Surveillance Ecosystem', year:'Comprehensive legislative map · 2026',
+   body:'This map documents the overlapping laws, institutions, digital infrastructure, and human rights accountability gaps that together form Malaysia\'s surveillance ecosystem. Click any node to explore its role, legal provisions, and connections. Use the filter tabs to isolate individual layers.',
+   tags:['Research by Sinar Project','Infographic for advocacy use','Click any node to explore']},
+
+  // INTERNATIONAL — top arc, not ratified
+  {id:'iccpr', label:'ICCPR\n✕ Not ratified', layer:'intl', ax:.08, ay:.06, col:C.gap,
+   views:['all','intl'],
+   name:'International Covenant on Civil and Political Rights (ICCPR)', year:'Not ratified by Malaysia',
+   body:'Contains Art.17 (right to privacy), Art.19 (freedom of expression), Art.9 (liberty and security of person), Art.14 (fair trial) — the rights most directly relevant to Malaysia\'s surveillance ecosystem. Without ratification, the UN Human Rights Committee has no mandate over Malaysia. Every warrantless interception, MySejahtera mass collection, MyKasih behavioural restriction, and eKYC identity disclosure is unaccountable to this treaty body.',
+   note:'Malaysia is one of very few democracies not party to the ICCPR. The rights it would protect — privacy, expression, liberty — are precisely those the surveillance ecosystem violates. Non-ratification is the single largest structural accountability gap.',
+   noteCol:C.gap,
+   tags:['Art.17 privacy — not binding','Art.19 expression — not binding','Art.9 liberty — not binding','No UN Human Rights Committee mandate','No individual complaints mechanism']},
+
+  {id:'icescr', label:'ICESCR\n✕ Not ratified', layer:'intl', ax:.22, ay:.04, col:C.gap,
+   views:['all','intl'],
+   name:'International Covenant on Economic, Social and Cultural Rights (ICESCR)', year:'Not ratified by Malaysia',
+   body:'Covers rights most affected by welfare surveillance: Art.9 (social security), Art.11 (adequate standard of living). Malaysia\'s MyKasih welfare system ties benefit receipt to granular behavioural monitoring without the dignity-respecting ICESCR framework. Without ICESCR ratification, there is no international treaty obligation governing how Malaysia delivers social benefits.',
+   note:'The MyKasih surveillance-as-welfare model subjects 22 million families to purchase-level monitoring as the price of aid. No ICESCR constraint applies.',
+   noteCol:C.gap,
+   tags:['Art.9 social security — not binding','Art.11 adequate living — not binding','No welfare delivery rights floor','MyKasih dignity — no treaty constraint']},
+
+  {id:'cat', label:'CAT\n✕ Not ratified', layer:'intl', ax:.37, ay:.03, col:C.gap,
+   views:['all','intl'],
+   name:'Convention Against Torture (CAT)', year:'Not ratified by Malaysia',
+   body:'Prohibits torture and cruel, inhuman or degrading treatment in detention settings. POTA and POCA detention without trial, electronic monitoring conditions, and religious enforcement agency raid practices fall outside CAT oversight. No treaty body monitors Malaysian detention conditions or enforcement practices.',
+   noteCol:C.gap,
+   tags:['Torture prohibition — not binding','POTA/POCA detention — no CAT oversight','Religious enforcement raids — no constraint','No detention monitoring']},
+
+  {id:'icerd', label:'ICERD\n✕ Not ratified', layer:'intl', ax:.52, ay:.03, col:C.gap,
+   views:['all','intl'],
+   name:'International Convention on the Elimination of All Forms of Racial Discrimination (ICERD)', year:'Not ratified — rejected 2018 after street protests',
+   body:'Would require elimination of racial discrimination in law and practice, including in surveillance. NRD records ethnicity; MySejahtera collected ethnicity data; Data Sharing Act enables cross-agency sharing. Malaysia rejected ICERD ratification in 2018 following street protests — making it politically the most fraught outstanding ratification. Orang Asli communities face welfare targeting and surveillance with no CERD monitoring.',
+   note:'2018 ICERD rejection is significant political context: any future ratification attempt will face the same mobilisation. The ethnic dimension of the surveillance ecosystem — NRD ethnicity field, MySejahtera, MyKasih demographic targeting — has no international constraint.',
+   noteCol:C.gap,
+   tags:['Racial discrimination — not binding','NRD ethnicity field — no CERD constraint','2018 ICERD rejection — street protests','Orang Asli surveillance — no treaty oversight']},
+
+  {id:'refugee', label:'Refugee Convention\n✕ Not ratified', layer:'intl', ax:.67, ay:.04, col:C.gap,
+   views:['all','intl'],
+   name:'1951 Refugee Convention & 1967 Protocol', year:'Not ratified by Malaysia',
+   body:'Malaysia hosts 180,000+ UNHCR-registered refugees treated as illegal immigrants. The TRIS system — developed by the same company as MyBorderPass (Barisan Mahamega Sdn Bhd) — collects fingerprint and facial biometrics from refugees for MyRC identity cards. No PDPA protection applies. Refugees are the most biometrically surveilled population in Malaysia with the fewest legal protections of any group.',
+   note:'Same private developer (Barisan Mahamega/TRIS) holds both citizen border clearance data (MyBorderPass/MyNIISe) and refugee biometric registry with no refugee rights framework constraining data use.',
+   noteCol:C.gap,
+   tags:['180,000+ refugees — no legal status','TRIS refugee biometric tracking','Barisan Mahamega — same developer as MyNIISe','No PDPA for refugee data','Refugees treated as illegal immigrants']},
+
+  {id:'ilo169', label:'ILO 169\n✕ Not ratified', layer:'intl', ax:.81, ay:.06, col:C.gap,
+   views:['all','intl'],
+   name:'ILO Convention No. 169 — Indigenous and Tribal Peoples', year:'Not ratified by Malaysia',
+   body:'Protects indigenous peoples\' rights to free, prior and informed consent on decisions affecting them. Orang Asli communities are subject to MyKasih welfare programmes, MySejahtera data collection, and NRD registration without indigenous data sovereignty protections. MyKasih Foundation explicitly runs programmes in 18 Orang Asli primary schools — without any FPIC framework.',
+   noteCol:C.gap,
+   tags:['Orang Asli — no ILO 169 protection','No FPIC for surveillance','MyKasih Orang Asli programmes — no consent','No indigenous data sovereignty']},
+
+  // RATIFIED WITH RESERVATIONS
+  {id:'crc_r', label:'CRC ⚠ Ratified\n(with reservations)', layer:'ratified', ax:.92, ay:.14, col:C.rat,
+   views:['all','intl'],
+   name:'Convention on the Rights of the Child (CRC)', year:'Ratified 1995 — with reservations on Islamic law provisions',
+   body:'Ratified with reservations on provisions conflicting with domestic law and Islamic law. UN CRC Concluding Observations (February 2026) expressed concern about: lack of inclusive digital access for children, the digital divide, the eKYC age ban\'s proportionality, and limited privacy protection. The Committee recommended a child rights-based approach to the Online Safety Act 2025.',
+   note:'Directly relevant to current Sinar advocacy: the Feb 2026 UN CRC Concluding Observations directly criticised the eKYC under-16 social media ban — cited in the Sinar/CIJ/A19 joint statement of May 2026.',
+   noteCol:C.rat,
+   tags:['Ratified 1995 — with reservations','UN CRC Concluding Obs. Feb 2026','eKYC ban — CRC criticism','Digital divide concern','CRC reservations on Islamic law provisions']},
+
+  {id:'cedaw_r', label:'CEDAW ⚠ Ratified\n(with reservations)', layer:'ratified', ax:.92, ay:.27, col:C.rat,
+   views:['all','intl'],
+   name:'Convention on the Elimination of All Forms of Discrimination Against Women (CEDAW)', year:'Ratified 1995 — with reservations on Islamic law provisions',
+   body:'Ratified with reservations on provisions conflicting with the Federal Constitution and Islamic law. CEDAW Committee has repeatedly recommended removing these reservations. At the 2024 UPR, Malaysia only "noted" (did not accept) recommendations to remove them. Khalwat enforcement, dress code surveillance, and religious enforcement raid practices disproportionately impact women and gender non-conforming persons.',
+   noteCol:C.rat,
+   tags:['Ratified 1995 — with reservations','Reservations on Islamic law provisions','2024 UPR — reservations not removed','Syariah enforcement raised under CEDAW','Khalwat/dress surveillance — gendered impact']},
+
+  {id:'crpd_r', label:'CRPD ⚠ Ratified\n(with reservations)', layer:'ratified', ax:.92, ay:.40, col:C.rat,
+   views:['all','intl'],
+   name:'Convention on the Rights of Persons with Disabilities (CRPD)', year:'Ratified 2010 — with reservations on Arts.15 & 18',
+   body:'Ratified with reservations on Art.15 (freedom from torture) and Art.18 (freedom of movement and nationality). eKYC biometric selfie and document upload requirements may be inaccessible to persons with certain disabilities, raising CRPD Art.9 (accessibility) concerns.',
+   noteCol:C.rat,
+   tags:['Ratified 2010 — reservations Arts.15 & 18','eKYC — digital exclusion risk for persons with disabilities','CRPD Art.9 accessibility concern']},
+
+  // SOFT ACCOUNTABILITY — bottom
+  {id:'ahrd', label:'ASEAN AHRD\n(non-binding)', layer:'intl', ax:.09, ay:.94, col:C.gap,
+   views:['all','intl'],
+   name:'ASEAN Human Rights Declaration (AHRD) & AICHR', year:'Non-binding; AICHR est. 2009; Malaysia chaired 2025',
+   body:'Malaysia is a signatory to the AHRD and chaired AICHR in 2025. However, the AHRD is non-binding, contains national security caveats permitting rights restrictions, and AICHR has no investigative authority, cannot receive individual complaints, and cannot compel accountability. It is a promotional body only.',
+   note:'Malaysia chaired AICHR in 2025 while simultaneously rolling out the Data Sharing Act, eKYC, and post-MySejahtera governance failures. A promotional mandate without enforcement powers.',
+   noteCol:C.gap,
+   tags:['Non-binding declaration','National security caveats in AHRD','AICHR — no investigative authority','AICHR — no individual complaints','Malaysia chaired AICHR 2025','Promotional only — no protective mandate']},
+
+  {id:'upr', label:'UN UPR\n(soft accountability)', layer:'ratified', ax:.22, ay:.96, col:C.rat,
+   views:['all','intl'],
+   name:'UN Universal Periodic Review (UPR)', year:'Most recent: January 2024 (45th session)',
+   body:'The only universal accountability mechanism applying to Malaysia across all rights — but entirely non-binding. Of 11 civic space-related recommendations Malaysia received in 2018, only 3 were partially implemented. Malaysia received recommendations at the 2024 UPR to ratify ICCPR, ICESCR, CAT, and ICERD. The surveillance ecosystem has expanded significantly since the review.',
+   noteCol:C.rat,
+   tags:['UPR Jan 2024 — 45th session','3/11 civic space recs partially implemented (2018)','ICCPR/ICESCR/CAT/ICERD ratification recommended','Non-binding — no enforcement mechanism','Surveillance expanded significantly since 2024 review']},
+
+  // SECURITY ACTORS — left
+  {id:'agc', label:'Attorney\nGeneral (AGC)', layer:'actor', ax:.08, ay:.17, col:C.sc,
+   views:['all','security'],
+   name:'Attorney General / Public Prosecutor', year:'Primary authorisation chokepoint',
+   body:'Must authorise communications interception under SOSMA and CMA — replacing judicial oversight with a single executive officer. This means no court warrant is required for wiretapping security suspects. Also designated as an agency under the Data Sharing Act 2025. Prosecutes media and online speech offences. Can receive MMC referrals for criminal action.',
+   tags:['SOSMA/CMA interception gate — no judicial warrant','Single non-judicial authorisation gate','Data Sharing Act designated agency','Media and speech prosecution','MMC referral recipient']},
+
+  {id:'potb', label:'Prevention of\nTerrorism Board', layer:'actor', ax:.18, ay:.13, col:C.sc,
+   views:['all','security'],
+   name:'Prevention of Terrorism Board', year:'Non-judicial board under POTA 2015',
+   body:'Non-judicial board that makes detention decisions without trial under POTA. Issues electronic monitoring conditions on released detainees. Members are appointed by the Minister with no judicial accountability. Decisions are not subject to judicial review. The board structure itself is the surveillance mechanism — it detains and tracks without going through the courts.',
+   tags:['Non-judicial detention decisions','POTA authority','Electronic monitoring orders','Minister-appointed members','No judicial review']},
+
+  {id:'rmp', label:'Royal Malaysian\nPolice (RMP)', layer:'actor', ax:.28, ay:.10, col:C.sc,
+   views:['all','security'],
+   name:'Royal Malaysian Police', year:'Primary civil enforcement agency',
+   body:'Executes surveillance, search, and arrest powers across virtually all civil surveillance legislation. Has access to MySejahtera health data, NRD biometrics, and — via the Data Sharing Act 2025 — financial and welfare transaction data. Lead agency for SOACA investigations into online child abuse. Coordinates with religious enforcement agencies (JAWI/JAI) on joint operations. eKYC social media data accessible via subpoena.',
+   tags:['SOSMA interception authority','CCA search & seizure','Data Sharing Act — financial/welfare access','SOACA lead investigator','Joint ops with JAIs','eKYC data — subpoena risk']},
+
+  // SYARIAH ACTORS
+  {id:'jawi', label:'JAWI / JAKIM\n& state JAIs', layer:'actor', ax:.16, ay:.24, col:C.sy,
+   views:['all','syariah'],
+   name:'JAWI, JAKIM & State Islamic Affairs Departments (JAIs)', year:'Religious enforcement actors — parallel system',
+   body:'Federal Territories Islamic Department (JAWI) and state Islamic Affairs Departments are the frontline religious enforcement agencies. They conduct khalwat raids, moral policing, and vice enforcement with warrantless entry and arrest powers under Syariah Criminal Procedure Enactments. Operations frequently triggered by anonymous tip-offs. Operate a parallel enforcement infrastructure entirely outside civil constitutional protections. Under the Data Sharing Act 2025, could in principle request spending data on Muslims under surveillance.',
+   note:'Documented cases: 2016 JAWI transgender raid (later ruled illegal); 2022 REXKL Halloween raid (18 Muslims detained for cross-dressing). Ongoing khalwat enforcement via anonymous tip-offs and community informant networks.',
+   noteCol:C.sy,
+   tags:['Warrantless entry into private premises','Khalwat / moral policing raids','LGBTQ+ events targeted','Anonymous tip-off surveillance','Community informant networks','Data Sharing Act — spending data risk']},
+
+  {id:'syariah_courts', label:'Syariah Courts\nSystem', layer:'actor', ax:.06, ay:.31, col:C.sy,
+   views:['all','syariah'],
+   name:'Syariah Courts System', year:'State-level jurisdiction, Muslims only',
+   body:'Each of Malaysia\'s 14 states operates its own Syariah courts with criminal jurisdiction conferred by Act 355. Maximum penalty: 3 years imprisonment, RM5,000 fine, 6 strokes of the cane. Operates parallel to civil courts. The 2024 Federal Court (Kelantan) ruling invalidated state Syariah provisions exceeding constitutional limits — but 9 other states have similar provisions under active review.',
+   note:'The 2024 Kelantan ruling is the most significant constitutional constraint on Syariah criminal codes in decades. Its implications for the other 9 states are still being worked out and represent an important advocacy opportunity.',
+   noteCol:C.sy,
+   tags:['State-level jurisdiction','Muslims only','Act 355 penalty ceiling','2024 Federal Court Kelantan ruling','9 other states under review','Parallel to civil courts']},
+
+  // CYBER/DATA ACTORS
+  {id:'pdpc', label:'Dept. Personal\nData Protection', layer:'actor', ax:.40, ay:.09, col:C.cy,
+   views:['all','infra'],
+   name:'Dept. of Personal Data Protection (PDPC)', year:'PDPA regulator',
+   body:'Implements and enforces the PDPA. The critical structural gap: PDPC has no mandate over government data processing — meaning MySejahtera, NRD, MyDigital ID, MyNIISe, BNM/PayNet, MyKasih, and all Data Sharing Act transfers fall entirely outside its jurisdiction. Syariah enforcement agencies are also outside scope. The PDPC\'s protective reach ends exactly where state surveillance begins.',
+   tags:['PDPA enforcement','No mandate over govt data processing','MySejahtera outside scope','MyDigital ID outside scope','MyKasih outside scope','Data Sharing Act outside PDPC scope']},
+
+  {id:'nacsa', label:'NACSA', layer:'actor', ax:.52, ay:.10, col:C.cy,
+   views:['all','infra','security'],
+   name:'National Cyber Security Agency (NACSA)', year:'CSA 2024 lead agency',
+   body:'National lead agency for cybersecurity under the Cybersecurity Act 2024. Backs MyDigital ID alongside the National Security Council. Co-manages MySejahtera data alongside MOH. Powers to audit and compel disclosure from all National Critical Information Infrastructure (NCII) entities. No independent oversight body monitors NACSA itself.',
+   tags:['CSA 2024 authority','MyDigital ID oversight (with NSC)','MySejahtera co-custodian','NCII compel disclosure','No independent oversight of NACSA']},
+
+  {id:'bnm', label:'Bank Negara\nMalaysia (BNM)', layer:'actor', ax:.62, ay:.12, col:C.cy,
+   views:['all','infra'],
+   name:'Bank Negara Malaysia', year:'Financial regulator & PayNet majority owner',
+   body:'Central bank and largest shareholder of PayNet (operator of DuitNow/FPX). Sets AML/CFT rules mandating KYC and continuous transaction monitoring for all e-wallet operators. Approved the MyKasih MyKad chip payment system. Under the Data Sharing Act 2025, BNM-regulated financial data can be shared with designated government agencies without individual consent.',
+   note:'BNM is simultaneously the regulator setting surveillance obligations on financial institutions AND the majority owner of the payment infrastructure capturing all transaction data. This dual role creates a structural surveillance concentration with no independent oversight.',
+   noteCol:C.cy,
+   tags:['PayNet majority owner','DuitNow/FPX infrastructure owner','MyKasih BNM chip payment approval','AML/CFT — KYC mandatory for all e-wallets','Continuous transaction monitoring','Data Sharing Act — financial data shareable']},
+
+  // COMMS ACTORS
+  {id:'mcmc', label:'MCMC', layer:'actor', ax:.73, ay:.10, col:C.cc,
+   views:['all','media','security'],
+   name:'Malaysian Communications & Multimedia Commission', year:'CMA 1998 regulator',
+   body:'Regulator under CMA 1998. Powers of entry, investigation, and prosecution. Issues content removal directions and website blocking orders. Enforces the Online Safety Act. Coordinated mandatory MyDigital ID integration into all telco apps from December 2025. Enforces eKYC age verification under the Children\'s Protection Code and Risk Mitigation Code from June 2026. Platforms face RM10 million penalties for non-compliance. Has blocked critical news sites (MalaysiaNow, UtusanTV, TV Pertiwi, Asia Sentinel) and Grindr.',
+   note:'MCMC blocked Grindr and critical news outlets in the same enforcement period — illustrating how the same "safety" infrastructure simultaneously suppresses LGBTQ+ expression and independent journalism.',
+   noteCol:C.cc,
+   tags:['Content removal & website blocking orders','OSA enforcement','eKYC CPC/RMC enforcement (June 2026)','RM10M platform penalty','MyDigital ID telco integration','Grindr blocked','Critical news sites blocked']},
+
+  {id:'mcis', label:'MCIS', layer:'actor', ax:.82, ay:.14, col:C.mg,
+   views:['all','media'],
+   name:'Malaysian Council for Internet Safety (MCIS)', year:'Est. 2024 — cross-ministry advisory body',
+   body:'Cross-ministry advisory body established February 2024 under the Ministry of Communications. Coordinates online safety policy with focus on child online safety. Not a statutory body — has no independent enforcement powers. Feeds recommendations into the OSA framework and CMA platform licensing regime. The eKYC age verification mandate for social media emerged partly from MCIS policy work.',
+   tags:['Cross-ministry coordination','Non-statutory — no enforcement powers','Child online safety focus','eKYC policy input','OSA/CMA policy feed']},
+
+  {id:'telecom', label:'Telecoms &\nPrivate Sector', layer:'actor', ax:.82, ay:.25, col:C.cc,
+   views:['all','infra','media'],
+   name:'Telecoms & Private Sector Operators', year:'Compelled actors — deputised as surveillance infrastructure',
+   body:'Local telecoms, ISPs, social media platforms, and e-wallet operators operate under compelled cooperation frameworks. Must integrate MyDigital ID into all apps (December 2025). Must hold ASP(C) licences (Jan 2025 onwards). Must implement eKYC age verification from June 2026. E-wallet operators must conduct continuous AML transaction monitoring. Social media platforms are now effectively mandatory identity verification infrastructure.',
+   tags:['MyDigital ID — mandatory integration Dec 2025','eKYC — implementation burden June 2026','ASP(C) licensing (Jan 2025)','E-wallet KYC & continuous monitoring','Platform as compelled identity infrastructure']},
+
+  {id:'mmc_actor', label:'Malaysian Media\nCouncil (MMC)', layer:'actor', ax:.70, ay:.20, col:C.mg,
+   views:['all','media'],
+   name:'Malaysian Media Council', year:'Act 868, in force June 2025',
+   body:'Self-regulatory body with 21-member governing board (media companies, journalists, civil society, government representatives). Sets ethical standards, handles complaints, can impose monetary penalties, suspend accreditation, or refer matters to police. Took a public position on the arrest of journalist Rex Tan in January 2026. Can recommend law reforms. Government representatives sit on the board — a structural compromise on independence.',
+   tags:['Self-regulatory body','21-member board incl. govt reps','Code of conduct & complaint adjudication','Monetary penalties & police referral','Rex Tan statement Jan 2026','Cannot override PPPA Home Minister powers']},
+
+  // CHILD ACTOR
+  {id:'jwp', label:'Dept. of Social\nWelfare (JKM)', layer:'actor', ax:.36, ay:.20, col:C.ch,
+   views:['all','security'],
+   name:'Dept. of Social Welfare (Jabatan Kebajikan Masyarakat)', year:"Children's Act 2001 lead & eKasih custodian",
+   body:'Lead child protection agency. Authorised to investigate child abuse, enter premises, and remove children at risk. Custodian of the eKasih poverty registry — which determines MyKasih welfare aid eligibility for 22 million families. Under the Data Sharing Act 2025, JKM is a potential designated agency for inter-government data sharing, enabling cross-referencing with MyDigital ID and NRD records.',
+   tags:["Children's Act 2001 authority",'eKasih poverty registry custodian','MyKasih eligibility determination','Data Sharing Act — inter-agency access risk','MySejahtera child health data access']},
+
+  // STATE DATA INFRASTRUCTURE — right column
+  {id:'nrd', label:'NRD / MyKad\nBiometric DB', layer:'infra', ax:.90, ay:.38, col:C.in_,
+   views:['all','infra','syariah'],
+   name:'National Registration Dept. — MyKad & Biometric Database', year:'NRD — operational since 2001 (MyKad chip)',
+   body:'Holds fingerprints, facial biometrics, IC number, religion, ethnicity, and home address for all Malaysian citizens. The religion field operationalises Syariah jurisdiction — a Muslim identity on MyKad is the trigger for JAWI/JAI enforcement. Now the real-time verification backend for MyDigital ID and eKYC social media age verification. Under the Data Sharing Act 2025, NRD data can be shared with designated agencies. PDPA does not apply.',
+   note:'The eKYC chain: MyKad → NRD → MyDigital ID → social media platform registration. Social media registration now implicitly carries religious and ethnic status disclosure to platforms.',
+   noteCol:C.in_,
+   tags:['Fingerprints + facial biometrics for all citizens','Religion & ethnicity — Syariah jurisdiction trigger','MyDigital ID real-time verification backend','eKYC social media registration backend','Data Sharing Act — NRD shareable without consent','PDPA does not apply']},
+
+  {id:'mydigitalid', label:'MyDigital ID\n(Convergence Hub)', layer:'infra', ax:.82, ay:.45, col:C.in_,
+   views:['all','infra'],
+   name:'MyDigital ID — National Digital Identity Convergence Infrastructure', year:'Mandatory rollout 2024–2026; 95% govt services target by 2030',
+   body:'Digital extension of MyKad, operated by MyDigital ID Sdn Bhd under the Prime Minister\'s Department, regulated by NSC and NACSA. Being mandated as the sole login for 95% of federal services by 2030. Already required for: MyJPJ (road tax/licence), MyNIISe (immigration), all telco apps (Dec 2025), and eKYC social media verification (June 2026). 45+ public and private platforms integrated. Verified against NRD in real time. PDPA does not apply. 17M MyKad records surfaced on dark web December 2024. MIMOS (the builder) found with RM28M unauthorised spending.',
+   note:'Convergence risk: MyDigital ID is becoming the single authentication key across banking, transport, telecoms, immigration, government services, and social media expression. Once the single ID is compromised, every connected service is exposed. Malaysia is ranked No.1 in Southeast Asia for data breaches.',
+   noteCol:C.in_,
+   tags:['Single key for 95% govt services by 2030','eKYC social media verification backend','NRD real-time verification','PDPA does not apply — no breach notification obligation','17M MyKad records dark web Dec 2024','MIMOS RM28M unauthorised spending','No.1 in SEA for data breaches']},
+
+  {id:'ekyc', label:'eKYC Social Media\nAge Verification\n(June 2026)', layer:'infra', ax:.90, ay:.52, col:C.in_,
+   views:['all','infra','media'],
+   name:'eKYC Mandatory Social Media Age Verification', year:'In force June 1 2026 — CPC & RMC under Online Safety Act',
+   body:'From June 1, 2026, all licensed social media platforms with 8M+ users must implement mandatory age verification using government-issued documents — MyKad, passport, or MyDigital ID — to prevent under-16s from opening accounts. Under MCMC\'s Children\'s Protection Code (CPC) and Risk Mitigation Code (RMC). In practice ALL users must verify their identity. Platforms face RM10 million penalties for non-compliance. This is the first time in Malaysian history that all social media users are required to tie their real identity to their online expression.',
+   note:'Sinar Project, Article 19, and CIJ joint statement (May 2026): the blanket verification is "misguided and disproportionate" and "will increase and normalise surveillance." Over 80 Malaysian and international civil society organisations co-signed. Over 400 global experts called for a moratorium on age-assurance technologies in March 2026. The UN CRC (Feb 2026) also raised concerns. MCMC released the consultation report just days before June 1 implementation.',
+   noteCol:C.in_,
+   tags:['In force June 1 2026','ALL users must verify identity — not just under-16s','MyKad / passport / MyDigital ID required','RM10M platform penalty for non-compliance','Sinar/CIJ/A19 joint statement May 2026','80+ CSO co-signatories','UN CRC concern Feb 2026','Normalises identity-linked online expression','Ends anonymity for whistleblowers, LGBTQ+, journalists','Implemented via regulatory codes — no parliamentary scrutiny']},
+
+  {id:'myniise', label:'MyBorderPass /\nMyNIISe', layer:'infra', ax:.90, ay:.60, col:C.in_,
+   views:['all','infra'],
+   name:'MyBorderPass & MyNIISe — Biometric Border Surveillance', year:'MyBorderPass 2024 pilot; MyNIISe from Sept 2025',
+   body:'MyBorderPass ran a facial recognition + QR pilot at the Johor-Singapore Causeway (320,000+ users). It is being superseded by MyNIISe — the Immigration Department\'s national digital clearance system. MyNIISe requires NFC passport scan, facial biometric selfie, and MyDigital ID login (mandatory from Jan 2026). Creates a timestamped biometric record of every border crossing. Expanding to KLIA T1/T2, Penang, Kuching, Kota Kinabalu. Will be used for the JB-Singapore RTS Link.',
+   note:'Developer concern: MyBorderPass was developed by Barisan Mahamega Sdn Bhd — the same company that runs TRIS (Tracking Refugees Information System). The same private entity holds biometric border crossing data for both citizens and refugees, with no PDPA protection and no public disclosure of retention periods.',
+   noteCol:C.in_,
+   tags:['Facial recognition at borders','NFC passport chip + biometric selfie','MyDigital ID mandatory login (Jan 2026)','Every border crossing: timestamped biometric record','Barisan Mahamega/TRIS — same developer as refugee tracker','PDPA does not apply','No data retention period disclosed']},
+
+  {id:'duitnow', label:'DuitNow / e-wallet\n& QR ecosystem', layer:'infra', ax:.90, ay:.68, col:C.in_,
+   views:['all','infra'],
+   name:'DuitNow / E-wallet & QR Code Ecosystem — Financial Surveillance Layer', year:'DuitNow est. 2018; 870M transactions in 2024 (RM31.1B)',
+   body:'National QR and instant payment infrastructure operated by PayNet (BNM is majority owner). DuitNow QR transactions: 870 million in 2024 worth RM31.1 billion. 88% of Malaysians use e-wallets. Every DuitNow QR scan creates a timestamped, geolocated, identity-verified record of a purchase — tied to an IC number or phone number via DuitNow proxy addressing. E-wallet operators must conduct continuous transaction monitoring and KYC under BNM 2025 AML rules. Touch \'n Go fined RM600,000 in 2023 for AML failures. Government subsidies (ePenjana, eBelia, SARA — RM2B+) disbursed through e-wallets, tying welfare receipt to digital identity.',
+   note:'Spending is movement: 870 million QR scans per year tied to IC numbers generate a near-continuous location trail for the majority of adult Malaysians — without any surveillance law being invoked, without PDPA protection (BNM is a government body), and without judicial oversight.',
+   noteCol:C.in_,
+   tags:['870M QR scans in 2024 (RM31.1B)','Every scan = timestamped location + verified identity','IC/phone number proxy addressing','BNM AML 2025 — continuous monitoring mandatory','Touch\'n Go RM600K fine for AML failure (2023)','RM2B+ govt subsidies via e-wallets','PDPA does not apply to BNM/PayNet','No judicial oversight of financial location data']},
+
+  {id:'mysejahtera', label:'MySejahtera\n& Health Data', layer:'infra', ax:.82, ay:.60, col:C.in_,
+   views:['all','infra'],
+   name:'MySejahtera — State Health Surveillance Infrastructure', year:'Deployed 2020; 38M+ Malaysians; ongoing',
+   body:'Contact tracing and health monitoring platform mandated for 38+ million Malaysians during COVID-19. Collects: IC number, phone, email, gender, ethnicity, religion, home address, location movement data, health assessments, vaccination status. PDPA does not apply (government processing exempt). No specific legislation established the legal basis for this mass data collection. Now expanded to a general health platform.',
+   note:'Ownership scandal 2022–23: developed by KPISoft/Entomo Malaysia (Singapore-owned), no open tender, perpetual licence granted to private MySJ Sdn Bhd for RM338.6 million. A "super admin" account downloaded 3 million user records via multiple IPs — no CCA charges were brought. PAC audit raised unresolved ownership and security questions. Malaysian Bar called for a Privacy Act in response.',
+   noteCol:C.in_,
+   tags:['38M+ users — near-total population','IC, location, ethnicity, religion, health data','PDPA does not apply','No specific legal basis for mass collection','Contested private ownership (MySJ Sdn Bhd)','Super admin breach — 3M records, no charges','PAC audit unresolved','Movement tracking infrastructure']},
+
+  {id:'mykasih', label:'MyKasih\nWelfare Surveillance', layer:'infra', ax:.82, ay:.68, col:C.in_,
+   views:['all','infra'],
+   name:'MyKasih — Welfare Targeting & Behavioural Surveillance Infrastructure', year:'Est. 2008 pilot; Foundation 2009; RM10.4B disbursed to 22M families',
+   body:'Cashless welfare aid system run by MyKasih Foundation (NGO) using technology operated by Dialog Group/DIV Services subsidiary. Uses MyKad chip for transactions — approved by NRD, Ministry of Home Affairs, MDEC, and BNM. Every purchase is recorded, traceable, and restricted: funds cannot be withdrawn as cash, cannot be transferred, and can only be spent on approved goods at approved partner merchants. Cross-references JKM\'s eKasih poverty registry and the STR database for eligibility. SARA 2025 government subsidy disbursed entirely through MyKasih. No PDPA protection. Under Data Sharing Act 2025, this data is shareable with designated government agencies including police.',
+   note:'The surveillance-as-welfare paradox: MyKasih subjects the poorest 22 million Malaysian families to the most granular, legally coerced behavioural monitoring in the ecosystem. Every meal purchase is logged. Every merchant location is recorded. Aid recipients cannot opt out without losing their welfare entitlement. The system is described as "transparent, traceable, and targeted" — language that describes surveillance as accurately as it describes aid.',
+   noteCol:C.in_,
+   tags:['22 million families — RM10.4B disbursed since 2009','Every purchase: logged, geolocated, identity-verified','Cannot withdraw as cash — approved goods only','eKasih/STR poverty registry cross-reference','Dialog Group / DIV Services private operator','PDPA does not apply','Data Sharing Act — welfare data shareable with police','Poorest Malaysians subject to most granular surveillance']},
+
+  // SYARIAH LEGISLATION — left column
+  {id:'mufti', label:'Mufti Bill 2024\n(pending)', layer:'syariah', ax:.06, ay:.44, col:C.sy,
+   views:['all','syariah'],
+   name:'Mufti (Federal Territories) Bill 2024', year:'Proposed — debated Oct 2024; not yet law',
+   body:'Would expand mufti authority to issue binding fatwas as state law in Federal Territories. Criticised by Sisters in Islam and civil society organisations for undermining individual freedoms, human rights, and constitutional accountability. Would shift interpretive authority over Islamic law from democratically-elected state assemblies to appointed religious scholars — a significant power transfer with surveillance implications for how Islamic offences are defined and enforced.',
+   note:'If passed, binding fatwas would expand the category of behaviours subject to religious enforcement surveillance — and would do so via appointed rather than elected authority, reducing democratic accountability.',
+   noteCol:C.sy,
+   tags:['Binding fatwa authority for Federal Territories','Sisters in Islam opposition','Democratic accountability concern','Shifts power from assemblies to appointees','Pending — not yet law']},
+
+  {id:'scja', label:'Syariah Courts\n(Crim. Juris.)\nAct 355', layer:'syariah', ax:.06, ay:.53, col:C.sy,
+   views:['all','syariah'],
+   name:'Syariah Courts (Criminal Jurisdiction) Act 1965', year:'Act 355, as amended — federal enabling act',
+   body:'The federal enabling act that confers criminal jurisdiction on state Syariah courts. Maximum penalty ceiling: 3 years imprisonment, RM5,000 fine, 6 strokes of the cane. PAS has repeatedly sought to expand this through hudud amendments. The 2024 Federal Court (Kelantan) ruling invalidated state Syariah criminal code provisions that exceeded constitutional limits — but 9 other states have similar provisions now under active legal scrutiny. Religion on MyKad (NRD) determines who falls under Syariah jurisdiction — this status is carried through MyDigital ID into every eKYC social media verification check.',
+   note:'The NRD/MyDigital ID/eKYC chain: the religion field on MyKad determines Syariah jurisdiction; MyDigital ID verifies against NRD in real time; eKYC social media registration uses MyDigital ID. Social media registration therefore now implicitly discloses religious status to platforms.',
+   noteCol:C.sy,
+   tags:['Federal enabling act for state Syariah courts','3yr/RM5,000/6 strokes penalty ceiling','2024 Kelantan Federal Court ruling','9 other states under review','Hudud expansion attempts by PAS','NRD religion → MyDigital ID → eKYC disclosure chain']},
+
+  {id:'scoe', label:'Syariah Criminal\nOffences Enactments\n(14 states)', layer:'syariah', ax:.06, ay:.63, col:C.sy,
+   views:['all','syariah'],
+   name:'Syariah Criminal Offences Enactments (14 states)', year:'State-level enactments — e.g. Selangor 1995, FT 1997',
+   body:'Each of Malaysia\'s 14 states and federal territories has its own Syariah Criminal Offences Enactment. These criminalise: khalwat (close proximity between unmarried persons of different genders), liwat (sodomy), musahaqah (lesbian acts), consumption of alcohol, apostasy, propagating non-Islamic doctrines to Muslims, and failing to attend Friday prayers. These offences directly motivate the surveillance and raid operations conducted by JAWI/JAIs. Anonymous tip-offs are the primary trigger for enforcement. The 2024 Kelantan ruling has put some provisions under constitutional review.',
+   tags:['Khalwat / liwat / musahaqah criminalised','Apostasy and propagation offences','Alcohol consumption offences','Warrantless enforcement via tip-offs','14-state variation in provisions','NRD religion field determines applicability']},
+
+  {id:'scpe', label:'Syariah Criminal\nProcedure Enactments\n(14 states)', layer:'syariah', ax:.06, ay:.73, col:C.sy,
+   views:['all','syariah'],
+   name:'Syariah Criminal Procedure Enactments (14 states)', year:'State-level — e.g. Selangor SCPE 2003',
+   body:'The procedural framework governing how religious enforcement agencies conduct investigations, raids, arrests and prosecutions. Under most state versions, khalwat is a "seizable offence" — allowing warrantless arrest and entry into private premises including homes and hotel rooms. Religious enforcement officers can enter private premises without a warrant if they have reasonable cause. These powers exceed what the civil Criminal Procedure Code permits for equivalent offences.',
+   note:'Privacy impact: warrantless home entry powers under these enactments, combined with an anonymous tip-off culture and active community informant networks, create a parallel behavioural surveillance infrastructure targeting religious and sexual conduct — with minimal judicial oversight at any stage.',
+   noteCol:C.sy,
+   tags:['Warrantless entry into private premises','Khalwat = seizable offence — arrest without warrant','Private homes and hotel rooms accessible','Exceeds civil CPC standards for equivalent offences','Community informant / anonymous tip-off system','Minimal judicial oversight']},
+
+  // CIVIL LEGISLATION — centre columns
+  {id:'fedconst', label:'Federal\nConstitution', layer:'law', ax:.17, ay:.44, col:C.lw,
+   views:['all','security','syariah'],
+   name:'Federal Constitution of Malaysia', year:'1957, as amended — supreme law',
+   body:'The supreme law. Art.5 (personal liberty) and Art.10 (freedom of expression and assembly) contain broad national security derogation clauses — the structural loophole enabling most surveillance legislation. No explicit right to privacy anywhere in the Constitution. Art.10(2) allows Parliament to restrict speech on national security, public order, and morality grounds — the constitutional basis for the PPPA, CMA S.233, and Sedition Act. The State List (Schedule 9) enables the parallel Syariah system. No constitutional basis exists to challenge MySejahtera, MyDigital ID, eKYC, or MyKasih.',
+   tags:['No explicit right to privacy','Art.10 expression — broad derogation clauses','Art.10(2) — basis for PPPA/CMA/Sedition Act','No constitutional basis to challenge digital infra','State List — enables parallel Syariah system']},
+
+  {id:'sosma', label:'SOSMA 2012', layer:'law', ax:.17, ay:.53, col:C.lw,
+   views:['all','security'],
+   name:'Security Offences (Special Measures) Act 2012', year:'SOSMA 2012 — replaced the Internal Security Act',
+   body:'S.6 allows interception of all communications "likely to contain" information relating to a security offence — authorised by the Public Prosecutor alone, with no court warrant required. Security offences are defined by reference to Penal Code Chapters VI and VIA. Replaced the ISA while retaining its most significant surveillance powers. Also authorises electronic ankle monitoring for persons released from POTA detention.',
+   tags:['S.6 comms interception — no court warrant','Public Prosecutor sole authorisation gate','Security offence defined by Penal Code Chs. VI/VIA','28-day detention without charge','Electronic ankle monitoring for released POTA detainees']},
+
+  {id:'pota', label:'POTA 2015', layer:'law', ax:.17, ay:.62, col:C.lw,
+   views:['all','security'],
+   name:'Prevention of Terrorism Act 2015', year:'POTA 2015',
+   body:'Allows detention without trial for up to 2 years (renewable) by a non-judicial Prevention of Terrorism Board. Enables electronic tracking anklets for released detainees. No habeas corpus challenge initially available. The definition of "terrorist activity" is broad enough to encompass political dissent in certain readings.',
+   tags:['Detention without trial — up to 2 years (renewable)','Electronic tracking of released detainees','Non-judicial Prevention of Terrorism Board','No habeas corpus initially','Travel bans on detainees']},
+
+  {id:'poca', label:'POCA 1959', layer:'law', ax:.17, ay:.71, col:C.lw,
+   views:['all','security'],
+   name:'Prevention of Crime Act 1959', year:'POCA 1959, substantially amended 2014',
+   body:'Colonial-era law revived and expanded in 2014. Allows administrative surveillance and detention orders on persons suspected of organised crime — without conviction or charge. A Prevention of Crime Board makes these decisions outside the court system. Monitoring conditions can include restricted residence, reporting requirements, and surveillance obligations.',
+   tags:['Administrative surveillance without conviction','Restricted residence orders','Monitoring and reporting conditions','Admin detention up to 2 years','Prevention of Crime Board — non-judicial']},
+
+  {id:'cpc', label:'Criminal\nProcedure Code', layer:'law', ax:.28, ay:.44, col:C.lw,
+   views:['all','security'],
+   name:'Criminal Procedure Code', year:'CPC 1999 (Act 593)',
+   body:'The procedural backbone for civil criminal investigations. Sections 116A and 116C grant police search and seizure powers over digital devices and computer systems. Warrant requirements exist but have broad urgency exceptions that allow warrantless action. Routinely overridden in practice by security legislation like SOSMA. The Data Sharing Act 2025 supplements the CPC by enabling pre-warrant cross-agency data access.',
+   tags:['S.116A/116C — digital device search & seizure','Warrant requirements — broad urgency exceptions','Overridden in practice by SOSMA/POTA','Data Sharing Act supplements CPC','Procedural backbone for all civil surveillance']},
+
+  {id:'ea', label:'Evidence Act\n1950', layer:'law', ax:.28, ay:.53, col:C.lw,
+   views:['all','security'],
+   name:'Evidence Act 1950', year:'EA 1950 — with digital evidence amendments',
+   body:'S.90A establishes admissibility rules for computer-generated documents. S.114A creates a presumption of authorship — a person is presumed to have published online content found on their devices or accounts unless they can prove otherwise. This reverse burden of proof has been used against bloggers, news sites, and online commentators. eKYC records, MyKasih transaction logs, and MyNIISe border crossing records are all potentially admissible under this framework.',
+   tags:['S.90A — admissibility of digital evidence','S.114A — reverse burden of proof for online publishing','Presumed author of content on your devices','Used against bloggers and news sites','eKYC/MyKasih/border records — all admissible']},
+
+  {id:'penal', label:'Penal Code', layer:'law', ax:.28, ay:.62, col:C.lw,
+   views:['all','security'],
+   name:'Penal Code', year:'1936, as amended — foundational criminal statute',
+   body:'Chapters VI and VIA define "security offences" and "terrorism offences" — the definitions that activate SOSMA interception powers and POTA detention. S.499/500 criminal defamation provisions have been used against journalists and bloggers. S.509 provides a narrow privacy offence limited to insult to modesty — the only general privacy criminal provision in Malaysian law, though it is rarely applied. Serves as catch-all for digital offences without specific statutes.',
+   tags:['Ch. VI/VIA defines security offences — triggers SOSMA','S.499/500 criminal defamation — used against media','S.509 — narrow privacy offence (insult to modesty)','No general right to privacy in criminal law','Digital offence catch-all']},
+
+  {id:'cca', label:'Computer\nCrimes Act 1997', layer:'law', ax:.28, ay:.71, col:C.lw,
+   views:['all','security'],
+   name:'Computer Crimes Act 1997', year:'CCA 1997',
+   body:'Malaysia\'s primary cybercrime statute, criminalising unauthorised access (S.3) and data interference (S.4). Extraterritorial reach — applies to any person where a Malaysian computer is involved, regardless of nationality. Grants police search, seizure, and arrest powers. Pre-dates cloud computing, smartphones, and state-grade spyware. The MySejahtera "super admin" breach (3 million records downloaded) would appear to fall under this Act — but no CCA charges were brought.',
+   tags:['S.3 — unauthorised access (criminal)','S.4 — data interference','Extraterritorial jurisdiction (S.9)','Search, seizure, arrest powers','MySejahtera breach — CCA applicable, no charges brought']},
+
+  {id:'dsa', label:'Data Sharing\nAct 2025', layer:'law', ax:.40, ay:.44, col:C.lw,
+   views:['all','infra','security'],
+   name:'Data Sharing Act 2025', year:'In force 2025',
+   body:'Enables designated government agencies to share data with each other without individual consent. Allows cross-referencing of NRD, MySejahtera, MyDigital ID, financial (BNM/PayNet), health, immigration (MyNIISe), welfare (eKasih/MyKasih), and eKYC data across agencies — including police, tax authorities, and security agencies. PDPC has no oversight of these transfers. This is the legal instrument that converts Malaysia\'s collection of individual surveillance systems into an integrated ecosystem.',
+   note:'The Data Sharing Act is the most significant structural change to Malaysia\'s surveillance ecosystem in years. Each individual data system had some limited scope — the Data Sharing Act removes the firewall between them. Police can in principle now cross-reference your health records, financial transactions, border crossing history, welfare purchases, and social media registration in a single query.',
+   noteCol:C.lw,
+   tags:['Cross-agency data sharing without individual consent','Police + tax + security can access all datasets','NRD + MySejahtera + financial + welfare + eKYC','No PDPC oversight of transfers','Removes firewall between surveillance silos','Converts individual systems into integrated ecosystem']},
+
+  {id:'csa', label:'Cybersecurity\nAct 2024', layer:'law', ax:.40, ay:.53, col:C.lw,
+   views:['all','infra'],
+   name:'Cybersecurity Act 2024', year:'CSA 2024 — in force August 26 2024',
+   body:'Establishes Malaysia\'s national cybersecurity framework. National Critical Information Infrastructure (NCII) entities must report cybersecurity incidents to NACSA or face penalties of RM500,000 fine or 10 years imprisonment. NACSA can audit and compel disclosure from private NCII operators. MyDigital ID and DuitNow/PayNet are strong candidates for NCII status. The eKYC social media verification system creates a new distributed attack surface held across multiple private platforms.',
+   tags:['NACSA oversight of all NCII entities','Mandatory incident reporting — RM500k/10yr penalty','Compel disclosure from private operators','MyDigital ID likely NCII entity','PayNet/DuitNow likely NCII entity','eKYC — distributed breach surface across platforms']},
+
+  {id:'pdpa', label:'PDPA 2010\n(Amended 2024)', layer:'law', ax:.40, ay:.62, col:C.lw,
+   views:['all','infra'],
+   name:'Personal Data Protection Act 2010', year:'PDPA 2010; PDP Amendment Act 2024 (phased from Jan–Jun 2025)',
+   body:'Primary data protection legislation for commercial transactions. Built on seven principles: General, Notice & Choice, Disclosure, Security, Retention, Data Integrity, and Access. The 2024 amendments introduced mandatory DPO appointment (from June 2025), mandatory breach notification, and data portability rights. Critical structural gap: government data processing is explicitly excluded. The entire state surveillance infrastructure — MySejahtera, NRD, MyDigital ID, MyNIISe, BNM/PayNet, MyKasih, eKasih, Data Sharing Act transfers, eKYC government-side processing — falls completely outside PDPA.',
+   tags:['Seven data protection principles','Mandatory DPO (from June 2025)','Mandatory breach notification (from June 2025)','Data portability rights','GOVERNMENT DATA EXPLICITLY EXCLUDED','Entire state surveillance infra outside PDPA']},
+
+  {id:'fsa', label:'Financial Services\nAct & AMLA', layer:'law', ax:.40, ay:.71, col:C.lw,
+   views:['all','infra'],
+   name:'Financial Services Act 2013 & Anti-Money Laundering Act 2001', year:'FSA 2013 + AMLA 2001 (as amended)',
+   body:'FSA 2013 empowers BNM to regulate all payment systems and e-money issuers. AMLA 2001 mandates AML/CFT obligations including KYC, continuous transaction monitoring, and reporting of suspicious transactions to BNM for all financial institutions including e-wallet operators. These are the legal basis for the e-wallet surveillance obligations. BNM approved the MyKasih MyKad chip payment system under these frameworks. AMLA data can be shared with enforcement agencies.',
+   tags:['FSA — BNM authority over all payment systems','AMLA — KYC mandatory for all financial institutions','Continuous transaction monitoring obligation','Suspicious transaction reporting to BNM','MyKasih MyKad chip — BNM approval basis','AMLA data → shareable with enforcement agencies']},
+
+  {id:'cma', label:'CMA 1998', layer:'law', ax:.50, ay:.44, col:C.lw,
+   views:['all','security','media'],
+   name:'Communications & Multimedia Act 1998', year:'CMA 1998 — primary digital communications law',
+   body:'S.252 authorises interception of communications with Public Prosecutor approval — no court warrant required. S.234 prohibits unlawful interception but explicitly permits state-authorised interception. S.233 criminalises "improper use of network facility or network service" — used in 65 prosecutions between 2018 and 2023, overwhelmingly for online speech. MCMC can issue website blocking orders and confidentiality directions that restrict transparency about surveillance volumes. All licensed service providers must retain data under CMA.',
+   tags:['S.252 — lawful interception (no court warrant)','S.234 — unlawful interception prohibition (state exempt)','S.233 — 65 online speech prosecutions 2018–23','MCMC website blocking powers','Platform ASP(C) licensing (Jan 2025)','Data retention obligations on licensees','Confidentiality orders — suppress surveillance transparency']},
+
+  // CHILD LEGISLATION
+  {id:'chilact', label:"Children's\nAct 2001", layer:'child', ax:.50, ay:.53, col:C.ch,
+   views:['all','security'],
+   name:"Children's Act 2001", year:'Act 611 — child welfare and protection',
+   body:"Mandates reporting of child abuse and neglect to authorities. Authorises welfare officers and police to enter premises, remove children at risk, and place children under care and protection orders. The eKasih poverty registry (JKM) determines MyKasih eligibility including for children. MySejahtera holds children's vaccination and health data — JKM has access for welfare purposes, but the data governance framework for this access is not defined in any legislation. Under the Data Sharing Act 2025, JKM could cross-reference child records with NRD and MyDigital ID.",
+   tags:['Mandatory abuse and neglect reporting','Child removal and care powers','eKasih — child welfare determination','MyKasih student programme — purchase tracking','MySejahtera child health data access (undefined governance)','Data Sharing Act — JKM inter-agency access risk']},
+
+  {id:'soaca', label:'SOACA 2017', layer:'child', ax:.50, ay:.63, col:C.ch,
+   views:['all','security'],
+   name:'Sexual Offences Against Children Act 2017', year:'Act 792',
+   body:'Criminalises child sexual abuse material (CSAM), online grooming, and sexual communication with a minor. Section 17 allows covert surveillance operations — police officers may pose as children online to gather evidence. Requires platforms to report CSAM to authorities. Creates an evidentiary framework for digital evidence in child offence cases. The eKYC social media age verification mandate is partly justified using SOACA\'s child protection rationale — but Sinar/CIJ/A19 argue the implementation goes far beyond child protection and creates universal identity-linked surveillance.',
+   note:'The SOACA protective rationale for eKYC: preventing grooming online. The civil society critique: requiring government ID verification from all social media users (not just those who appear underage) is disproportionate, normalises surveillance, and threatens anonymity for journalists, whistleblowers, and LGBTQ+ persons who have no protective relationship to child safety concerns.',
+   noteCol:C.ch,
+   tags:['CSAM criminalisation','Online grooming offence','S.17 — covert online surveillance (police pose as children)','Platform CSAM mandatory reporting','eKYC child protection rationale cited','Disproportionate implementation critique from Sinar/CIJ/A19']},
+
+  // MEDIA LEGISLATION — centre-right
+  {id:'pppa', label:'Printing Presses\n& Publications\nAct 1984', layer:'media', ax:.62, ay:.44, col:C.mg,
+   views:['all','media'],
+   name:'Printing Presses & Publications Act 1984', year:'PPPA 1984, as amended',
+   body:'Requires all print publishers to obtain annual publishing permits from the Home Minister. The Minister has absolute, unreviewable discretion to grant, refuse, revoke, or suspend permits at any time. There is no judicial review of permit decisions. Used to suspend The Heat in 2013. Reports in 2024 suggested further amendments were being considered to restrict coverage of race, religion, and royalty (the "3Rs"). This is the structural contradiction at the heart of the MMC: a self-regulatory media council cannot function independently while the Home Minister can close any print publication at will.',
+   tags:['Annual permit from Home Minister','Home Minister has ABSOLUTE unreviewable discretion','No judicial review of permit decisions','The Heat suspension precedent (2013)','3R amendment proposals (2024)','Malaysian Bar calls for repeal','Structural contradiction with MMC independence']},
+
+  {id:'mmc_act', label:'Malaysian Media\nCouncil Act 2025', layer:'media', ax:.62, ay:.53, col:C.mg,
+   views:['all','media'],
+   name:'Malaysian Media Council Act 2025', year:'Act 868, gazetted June 13 2025 — in force',
+   body:'Establishes the MMC as a self-regulatory body covering print, broadcast, and digital media. Empowers the Council to set codes of conduct, adjudicate complaints, impose monetary penalties, and suspend accreditation. Aims to reduce reliance on CMA S.233 prosecutions and civil defamation suits for media disputes. Critically: operates alongside the PPPA, CMA S.233, Sedition Act, and Online Safety Act — not instead of them. Civil society called for a simultaneous roadmap to repeal restrictive laws; no such roadmap was published.',
+   tags:['Self-regulation framework (print + broadcast + digital)','Code of conduct and complaint adjudication','Monetary penalties and accreditation suspension','Police referral power','PPPA not repealed alongside MMC Act','Sedition Act still in force','OSA in force Jan 2026']},
+
+  {id:'osa_act', label:'Online Safety\nAct 2025\n(in force Jan 2026)', layer:'media', ax:.62, ay:.62, col:C.mg,
+   views:['all','media'],
+   name:'Online Safety Act 2025', year:'In force January 1 2026; eKYC CPC/RMC codes from June 1 2026',
+   body:'Major platforms with 8M+ Malaysian users are automatically subject to a wider set of Malaysian laws. MCMC enforcement authority. Child safety and online scam rationale. From June 2026, the Children\'s Protection Code and Risk Mitigation Code (subsidiary regulations under the OSA) mandate eKYC identity verification for all social media users. Could be used to mandate MyDigital ID real-name verification for all social media expression. Sinar Project, CIJ, and Article 19 issued joint critical statements at both the January 2026 implementation and the May 2026 eKYC rollout.',
+   note:'Sinar Project is one of three civil society organisations that issued both the January 2026 OSA implementation statement AND the May 2026 eKYC joint statement — making this the most active current Sinar advocacy front.',
+   noteCol:C.mg,
+   tags:['In force January 1 2026','Platforms 8M+ users — auto-subject to Malaysian law','eKYC CPC/RMC codes — June 1 2026','MCMC enforcement — RM10M platform penalty','MyDigital ID real-name social media risk','Sinar/CIJ/A19 joint statements (x2 — Jan and May 2026)']},
+
+  {id:'sedition', label:'Sedition Act\n1948', layer:'media', ax:.62, ay:.72, col:C.mg,
+   views:['all','media'],
+   name:'Sedition Act 1948', year:'1948, as amended — pre-independence colonial statute',
+   body:'Criminalises words, publications, or acts with a "seditious tendency" — defined broadly to include questioning royal powers, citizenship rights, or official religion. Regularly used against journalists, bloggers, academics, and opposition politicians. Operates alongside CMA S.233 as a dual speech prosecution tool. Was not repealed alongside the MMC Act despite civil society calls for simultaneous repeal. The government has committed to "review" rather than repeal.',
+   tags:['Colonial-era statute still in force','Seditious tendency — very broad definition','Used against journalists, bloggers, academics, politicians','Operates with CMA S.233 as dual prosecution tool','Not repealed alongside MMC Act','Govt: "review" not repeal']},
+
+  // IMPACTS — bottom
+  {id:'imp1', label:'Digital rights\nviolations', layer:'impact', ax:.08, ay:.88, col:C.im,
+   views:['all','security','infra','media'],
+   name:'Digital rights violations', year:'Human rights impact',
+   body:'Overlapping surveillance powers — warrantless interception (SOSMA/CMA), MCMC website blocking, MySejahtera and MyDigital ID tracking, SOACA covert online surveillance, OSA platform obligations (Jan 2026), eKYC mandatory social media identity verification (June 2026 — applies to ALL users), and MyKasih behavioural purchase monitoring — create a comprehensive digital surveillance environment with no meaningful legal recourse for citizens against state digital surveillance. No ICCPR Art.19 obligation applies.',
+   tags:['Warrantless interception (SOSMA/CMA)','MCMC website & app blocking','eKYC — ALL users must disclose identity to platforms','OSA Jan 2026 — platforms as enforcement agents','MyKasih — purchase-level digital monitoring','No ICCPR Art.19 obligation (not ratified)','No legal recourse against state digital surveillance']},
+
+  {id:'imp2', label:'Privacy\nviolations', layer:'impact', ax:.23, ay:.91, col:C.im,
+   views:['all','security','infra','syariah'],
+   name:'Privacy violations', year:'Human rights impact',
+   body:'No constitutional right to privacy. No ICCPR Art.17 obligation. The PDPA explicitly exempts government processing. The entire state infrastructure — MySejahtera (38M people), NRD biometrics (all citizens), MyDigital ID, MyNIISe border crossing records, DuitNow financial transaction data, MyKasih welfare purchase logs, eKYC social media identity records, and all Data Sharing Act cross-agency transfers — falls outside PDPA protection and outside any judicial oversight mechanism.',
+   tags:['No constitutional right to privacy','No ICCPR Art.17 obligation (not ratified)','PDPA explicitly exempts government processing','38M MySejahtera records — no PDPA','All citizens NRD biometrics — no PDPA','eKYC identity records — no PDPA (govt-side)','Data Sharing Act — cross-agency aggregation without consent or oversight']},
+
+  {id:'imp3', label:'Freedom of\nexpression', layer:'impact', ax:.37, ay:.93, col:C.im,
+   views:['all','security','media'],
+   name:'Freedom of expression', year:'Human rights impact',
+   body:'CMA S.233 (65 prosecutions 2018–23), PPPA Home Minister permit power, Sedition Act, MCMC blocking of critical news sites (MalaysiaNow, UtusanTV, TV Pertiwi, Asia Sentinel) and Grindr, OSA (Jan 2026), eKYC mandatory real-name social media verification (June 2026 — ending effective anonymity online for all users), and Syariah propagation offences together form a comprehensive constraint on expression. No ICCPR Art.19 obligation. Malaysia ranked 107th on the RSF Press Freedom Index 2024.',
+   tags:['CMA S.233 — 65 prosecutions 2018–23','PPPA — Home Minister permit power','Sedition Act in force','MCMC blocks critical news sites and Grindr','eKYC — mandatory real-name online expression (June 2026)','Ends effective online anonymity for all users','No ICCPR Art.19 (not ratified)','RSF Press Freedom Index: Malaysia 107th (2024)']},
+
+  {id:'imp4', label:'Freedom of\nmovement', layer:'impact', ax:.50, ay:.95, col:C.im,
+   views:['all','security','syariah'],
+   name:'Freedom of movement', year:'Human rights impact',
+   body:'POTA electronic ankle monitoring. POCA restricted residence orders. Non-judicial travel bans. Syariah conditions of release. MySejahtera location movement data (retention and use never publicly accounted for). MyNIISe: every border crossing is a timestamped biometric record. DuitNow QR scans as a near-continuous location trail (870M/year). MyKasih merchant location logs for 22M families. Data Sharing Act enables cross-agency movement profiling without judicial oversight. No ICCPR Art.12 obligation.',
+   tags:['POTA electronic ankle monitoring','POCA restricted residence orders','Non-judicial travel bans','MySejahtera location data — retention unaccounted for','MyNIISe — every crossing: timestamped biometric record','DuitNow QR — 870M location data points per year','MyKasih merchant locations — logged per purchase','No ICCPR Art.12 (not ratified)']},
+
+  {id:'imp5', label:'Legal uncertainty\n& unjust laws', layer:'impact', ax:.63, ay:.93, col:C.im,
+   views:['all','security','media'],
+   name:'Legal uncertainty & unjust laws', year:'Human rights impact',
+   body:'Overlapping civil and Syariah systems create jurisdictional uncertainty, especially in crossover cases. No Privacy Act for state data collection. Data Sharing Act enables cross-agency aggregation without consent. eKYC implemented via subsidiary regulatory codes rather than primary legislation — bypassing parliamentary scrutiny. Evidence Act S.114A reverses burden of proof for online expression. PPPA not repealed alongside MMC. 3 of 11 UPR civic space recommendations partially implemented. Malaysia ranked 8th worst globally for data breaches.',
+   tags:['No Privacy Act covering state data collection','Data Sharing Act — cross-agency without consent','eKYC — no parliamentary scrutiny (regulatory codes)','PPPA structural contradiction with MMC','S.114A — reverse burden of proof','3/11 UPR civic space recs implemented (2018)','Malaysia 8th worst globally for data breaches','No.1 in Southeast Asia for data breaches']},
+
+  {id:'imp6', label:'Child rights &\nwelfare gaps', layer:'impact', ax:.76, ay:.91, col:C.im,
+   views:['all','security'],
+   name:'Child rights & welfare gaps', year:'Human rights impact',
+   body:"Children's health data held in MySejahtera without specific legal governance framework. SOACA covert surveillance powers (S.17) used without child-specific safeguards. MyKasih student programme tracks children's school meal and stationery purchases at individual level. eKYC under-16 social media ban may drive teenagers to less regulated platforms. UN CRC Concluding Observations (February 2026) flagged Malaysia's digital divide, eKYC proportionality concerns, and inadequate privacy protection for children. CRC ratified — but with reservations on Islamic law provisions.",
+   tags:['MySejahtera child health data — no specific governance','SOACA S.17 covert surveillance — no child-specific oversight','MyKasih student programme — purchase-level tracking','eKYC — may drive under-16s to unregulated platforms','UN CRC Concluding Obs. Feb 2026 — multiple concerns','CRC ratified with Islamic law reservations']},
+
+  {id:'imp7', label:'Religious minorities\n& LGBTQ+', layer:'impact', ax:.50, ay:.84, col:C.im,
+   views:['all','syariah'],
+   name:'Religious minorities & LGBTQ+ communities', year:'Human rights impact',
+   body:'NRD religion → MyDigital ID → eKYC disclosure chain: social media registration now carries religious status to platforms. MCMC blocked Grindr. eKYC ends effective online anonymity for LGBTQ+ Muslims who previously used anonymous accounts to build community or seek support. Data Sharing Act risk: Syariah enforcement agencies could request financial transaction and location data to establish behavioural patterns (e.g. alcohol purchases, attendance at LGBTQ+ venues) without PDPA protection and without judicial oversight. No ICCPR, ICERD, or CAT obligations apply.',
+   note:'eKYC creates a specific new threat: LGBTQ+ Muslims who previously accessed social media anonymously must now tie their accounts to their IC numbers — disclosing their identity to platforms and, via the Data Sharing Act, potentially to government agencies including religious enforcement bodies.',
+   noteCol:C.sy,
+   tags:['NRD religion → MyDigital ID → eKYC disclosure chain','eKYC ends anonymous online expression for LGBTQ+ Muslims','Grindr blocked by MCMC','Data Sharing Act — financial/location cross-reference risk','Syariah agencies could access spending data','No ICCPR/ICERD/CAT obligations (not ratified)','Documented raids: 2016 JAWI transgender; 2022 REXKL Halloween']},
+
+  {id:'imp8', label:'Economic rights\n& financial exclusion', layer:'impact', ax:.88, ay:.88, col:C.im,
+   views:['all','infra'],
+   name:'Economic rights & financial exclusion', year:'Human rights impact',
+   body:'MyKasih ties welfare receipt to digital identity and purchase-level behavioural monitoring — the poorest 22 million Malaysian families face the most granular surveillance as the price of aid. The 90% cashless target excludes elderly, rural, undocumented, and refugee populations from economic participation. TRIS refugee biometric tracking (same developer as MyBorderPass). eKYC excludes those without government-issued ID (including stateless persons and undocumented workers) from digital public life. Government subsidies (ePenjana, eBelia, SARA — RM2B+) disbursed through digital systems requiring verified identity — effectively coercing digital onboarding of marginalised populations. No ICESCR obligations apply.',
+   tags:['MyKasih — poorest 22M families most surveilled','Welfare receipt tied to purchase-level monitoring','90% cashless target — excludes elderly/rural/undocumented','TRIS refugee biometric tracking','eKYC excludes those without govt-issued ID','RM2B+ subsidies via digital systems — coercive onboarding','No ICESCR obligations (not ratified)']},
+];
+
+// EDGES: [from, to]
+const EDGES = [
+  // Actor → Law
+  ['agc','sosma'],['agc','pota'],['agc','cma'],['agc','penal'],['agc','sedition'],['agc','dsa'],
+  ['potb','pota'],['potb','poca'],
+  ['rmp','sosma'],['rmp','poca'],['rmp','cca'],['rmp','cpc'],['rmp','soaca'],['rmp','penal'],['rmp','dsa'],
+  ['rmp','mysejahtera'],['rmp','nrd'],['rmp','mydigitalid'],['rmp','mykasih'],
+  ['jawi','scoe'],['jawi','scpe'],['jawi','nrd'],['jawi','mykasih'],
+  ['syariah_courts','scja'],['syariah_courts','scoe'],
+  ['pdpc','pdpa'],
+  ['nacsa','csa'],['nacsa','cca'],['nacsa','mysejahtera'],['nacsa','mydigitalid'],
+  ['bnm','fsa'],['bnm','duitnow'],['bnm','pdpa'],['bnm','dsa'],['bnm','mykasih'],
+  ['mcmc','cma'],['mcmc','osa_act'],['mcmc','mmc_act'],['mcmc','ekyc'],
+  ['mcis','osa_act'],['mcis','soaca'],['mcis','cma'],['mcis','ekyc'],
+  ['telecom','cma'],['telecom','osa_act'],['telecom','pdpa'],['telecom','fsa'],['telecom','ekyc'],
+  ['mmc_actor','pppa'],['mmc_actor','mmc_act'],['mmc_actor','sedition'],
+  ['jwp','chilact'],['jwp','soaca'],['jwp','mysejahtera'],['jwp','dsa'],['jwp','mykasih'],
+  // Infra → Law
+  ['nrd','pdpa'],['nrd','scja'],['nrd','scoe'],['nrd','dsa'],
+  ['mydigitalid','pdpa'],['mydigitalid','csa'],['mydigitalid','dsa'],['mydigitalid','fsa'],['mydigitalid','ekyc'],
+  ['ekyc','pdpa'],['ekyc','csa'],['ekyc','cca'],['ekyc','dsa'],['ekyc','osa_act'],['ekyc','soaca'],
+  ['myniise','pdpa'],['myniise','dsa'],['myniise','csa'],
+  ['duitnow','fsa'],['duitnow','pdpa'],['duitnow','dsa'],['duitnow','cca'],
+  ['mysejahtera','pdpa'],['mysejahtera','csa'],['mysejahtera','cca'],['mysejahtera','dsa'],
+  ['mykasih','pdpa'],['mykasih','fsa'],['mykasih','dsa'],['mykasih','duitnow'],
+  // Law cross-links
+  ['sosma','penal'],['sosma','cma'],['sosma','ea'],['pota','sosma'],['poca','cpc'],
+  ['cma','cca'],['csa','pdpa'],['penal','cpc'],['penal','ea'],['cpc','ea'],['pdpa','cma'],
+  ['soaca','cca'],['soaca','ea'],['chilact','cpc'],['scoe','penal'],['scpe','cpc'],
+  ['fedconst','scja'],['fedconst','pppa'],['mysejahtera','ea'],['nrd','cpc'],
+  ['pppa','cma'],['pppa','sedition'],['dsa','cpc'],['dsa','pdpa'],['fsa','cca'],
+  ['mydigitalid','nrd'],['mydigitalid','myniise'],['mydigitalid','duitnow'],
+  // Law → Impact
+  ['sosma','imp1'],['sosma','imp2'],['sosma','imp4'],
+  ['pota','imp4'],['poca','imp4'],['poca','imp5'],
+  ['cma','imp1'],['cma','imp3'],['cma','imp2'],
+  ['osa_act','imp1'],['osa_act','imp3'],['osa_act','imp6'],
+  ['pppa','imp3'],['pppa','imp5'],['sedition','imp3'],['sedition','imp5'],
+  ['dsa','imp2'],['dsa','imp4'],['dsa','imp5'],['dsa','imp7'],['dsa','imp8'],
+  ['fsa','imp8'],['fsa','imp2'],['cca','imp5'],['csa','imp2'],['csa','imp5'],
+  ['pdpa','imp2'],['pdpa','imp5'],['penal','imp3'],['penal','imp5'],
+  ['ea','imp2'],['ea','imp5'],['fedconst','imp2'],['fedconst','imp5'],
+  ['chilact','imp6'],['soaca','imp6'],['soaca','imp2'],
+  ['scoe','imp7'],['scoe','imp3'],['scpe','imp7'],['scpe','imp4'],
+  ['scja','imp5'],['scja','imp7'],['mufti','imp7'],
+  ['mysejahtera','imp2'],['mysejahtera','imp4'],['mysejahtera','imp1'],
+  ['nrd','imp2'],['nrd','imp7'],
+  ['mydigitalid','imp2'],['mydigitalid','imp1'],['mydigitalid','imp3'],['mydigitalid','imp5'],
+  ['myniise','imp2'],['myniise','imp4'],['myniise','imp8'],
+  ['duitnow','imp2'],['duitnow','imp4'],['duitnow','imp7'],['duitnow','imp8'],
+  ['mykasih','imp2'],['mykasih','imp4'],['mykasih','imp8'],['mykasih','imp6'],
+  ['ekyc','imp1'],['ekyc','imp2'],['ekyc','imp3'],['ekyc','imp7'],['ekyc','imp6'],['ekyc','imp8'],
+  // Intl → Impact (accountability gaps → what they fail to protect against)
+  ['iccpr','imp2'],['iccpr','imp3'],['iccpr','imp4'],['iccpr','imp5'],['iccpr','imp7'],
+  ['icescr','imp8'],['icescr','imp6'],
+  ['cat','imp4'],['cat','imp7'],
+  ['icerd','imp7'],['icerd','imp5'],
+  ['refugee','imp8'],['ilo169','imp8'],
+  ['crc_r','imp6'],['crc_r','imp1'],
+  ['cedaw_r','imp7'],['crpd_r','imp8'],
+  ['ahrd','imp5'],['upr','imp5'],['upr','imp3'],
+];
+
+let active = null, currentView = 'all';
+let BH = 1300;
+
+function W() { return document.getElementById('board').offsetWidth; }
+
+function nodeVisible(n) {
+  return currentView === 'all' || (n.views && n.views.includes(currentView));
+}
+
+function px(n) {
+  const w = W();
+  return { x: n.ax * w, y: n.ay * BH };
+}
+
+function isRelated(id) {
+  if (!active) return false;
+  if (id === active) return true;
+  return EDGES.some(([a, b]) => (a === active && b === id) || (b === active && a === id));
+}
+
+const layerDash = {
+  actor: [], child: [], media: [3, 3], syariah: [5, 4],
+  infra: [6, 3], law: [], impact: [], intl: [4, 4], ratified: [2, 4]
+};
+
+function draw() {
+  const canvas = document.getElementById('threads');
+  const w = W();
+  canvas.width = w * window.devicePixelRatio;
+  canvas.height = BH * window.devicePixelRatio;
+  canvas.style.width = w + 'px';
+  canvas.style.height = BH + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  ctx.clearRect(0, 0, w, BH);
+
+  const hub = NODES.find(n => n.id === 'hub');
+  const hp = px(hub);
+
+  // Hub spokes
+  NODES.filter(n => !['hub','law','impact'].includes(n.layer) && nodeVisible(n)).forEach(n => {
+    const p = px(n);
+    const act = isRelated(n.id);
+    const isG = n.layer === 'intl' || n.layer === 'ratified';
+    ctx.beginPath();
+    ctx.moveTo(hp.x, hp.y);
+    ctx.lineTo(p.x, p.y);
+    ctx.strokeStyle = n.col + (act ? 'cc' : '44');
+    ctx.lineWidth = act ? 2 : 0.9;
+    ctx.setLineDash(layerDash[n.layer] || []);
+    ctx.globalAlpha = isG ? 0.6 : 1;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  });
+  ctx.setLineDash([]);
+
+  // All edges
+  EDGES.forEach(([aid, lid]) => {
+    const an = NODES.find(n => n.id === aid);
+    const ln = NODES.find(n => n.id === lid);
+    if (!an || !ln || !nodeVisible(an) || !nodeVisible(ln)) return;
+    const pa = px(an), pl = px(ln);
+    const act = isRelated(aid) && isRelated(lid);
+    const isImp = ln.layer === 'impact';
+    const isIntl = an.layer === 'intl' || ln.layer === 'intl' || an.layer === 'ratified' || ln.layer === 'ratified';
+    const col = an.col === C.sy || ln.col === C.sy ? C.sy
+      : an.col === C.ch || ln.col === C.ch ? C.ch
+      : an.layer === 'infra' || ln.layer === 'infra' ? C.in_
+      : an.col === C.mg || ln.col === C.mg ? C.mg
+      : isIntl ? an.col : an.col;
+    ctx.beginPath();
+    ctx.moveTo(pa.x, pa.y);
+    ctx.lineTo(pl.x, pl.y);
+    ctx.strokeStyle = col + (act ? '99' : '28');
+    ctx.lineWidth = act ? 1.5 : 0.5;
+    ctx.setLineDash(isImp && !act ? [2, 3] : isIntl && !act ? [3, 4] : []);
+    ctx.globalAlpha = isIntl ? 0.55 : 1;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  });
+  ctx.setLineDash([]);
+}
+
+function render() {
+  const board = document.getElementById('board');
+  board.style.height = BH + 'px';
+  board.querySelectorAll('.pn, .cat-lbl').forEach(el => el.remove());
+  const w = W();
+
+  const cats = [
+    { t: 'International accountability gaps', x: .50, y: .025, c: C.gap },
+    { t: 'Security actors',   x: .20, y: .085, c: C.sc },
+    { t: 'Syariah track',     x: .06, y: .38,  c: C.sy },
+    { t: 'Civil legislation', x: .29, y: .38,  c: C.lw },
+    { t: 'Media governance',  x: .62, y: .38,  c: C.mg },
+    { t: 'Child protection',  x: .50, y: .47,  c: C.ch },
+    { t: 'State data infrastructure', x: .82, y: .375, c: C.in_ },
+    { t: 'Human rights impacts', x: .50, y: .81, c: C.im },
+  ];
+  cats.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'cat-lbl';
+    el.textContent = c.t;
+    el.style.left = (c.x * w) + 'px';
+    el.style.top = (c.y * BH) + 'px';
+    el.style.color = c.c;
+    board.appendChild(el);
+  });
+
+  NODES.forEach(n => {
+    if (!nodeVisible(n)) return;
+    const el = document.createElement('div');
+    el.className = 'pn' + (n.layer === 'hub' ? ' hub' : '') + (n.layer === 'impact' ? ' impact' : '') + (active === n.id ? ' active' : '');
+    el.style.left = (n.ax * w) + 'px';
+    el.style.top = (n.ay * BH) + 'px';
+
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    dot.style.background = n.col;
+    if (n.layer === 'impact')  dot.style.cssText = `background:transparent;border:1.5px dashed ${n.col};`;
+    if (n.layer === 'intl')    dot.style.cssText = `background:transparent;border:1.5px dotted ${n.col};`;
+    if (n.layer === 'ratified')dot.style.cssText = `background:transparent;border:1.5px solid ${n.col};`;
+    el.appendChild(dot);
+
+    const lbl = document.createElement('span');
+    lbl.className = 'lbl';
+    if (n.layer === 'hub') {
+      lbl.style.borderWidth = '2px'; lbl.style.borderColor = '#1A1814';
+    } else if (n.layer === 'syariah') {
+      lbl.style.borderColor = C.sy; lbl.style.borderWidth = '1px'; lbl.style.borderLeftWidth = '3px';
+    } else if (n.layer === 'child') {
+      lbl.style.borderColor = C.ch; lbl.style.borderWidth = '1px'; lbl.style.borderLeftWidth = '3px';
+    } else if (n.layer === 'infra') {
+      lbl.style.borderColor = C.in_; lbl.style.borderWidth = '1px'; lbl.style.borderLeftWidth = '3px';
+      lbl.style.background = '#EBF0FA';
+    } else if (n.layer === 'media') {
+      lbl.style.borderColor = C.mg; lbl.style.borderWidth = '1px'; lbl.style.borderLeftWidth = '3px';
+    } else if (n.layer === 'impact') {
+      lbl.style.borderColor = C.im; lbl.style.borderStyle = 'dashed'; lbl.style.color = C.im;
+    } else if (n.layer === 'intl') {
+      lbl.style.borderColor = C.gap; lbl.style.borderStyle = 'dotted'; lbl.style.borderWidth = '1.5px';
+      lbl.style.borderLeftWidth = '3px'; lbl.style.borderLeftStyle = 'dotted'; lbl.style.opacity = '0.85';
+    } else if (n.layer === 'ratified') {
+      lbl.style.borderColor = C.rat; lbl.style.borderWidth = '1px'; lbl.style.borderLeftWidth = '3px';
+    } else {
+      lbl.style.borderLeftColor = n.col; lbl.style.borderLeftWidth = '3px';
+    }
+    lbl.textContent = n.label;
+    el.appendChild(lbl);
+
+    if (n.layer !== 'hub') el.onclick = () => toggle(n.id);
+    board.appendChild(el);
+  });
+
+  draw();
+}
+
+function toggle(id) {
+  active = active === id ? null : id;
+  const empty = document.getElementById('sidebar-empty');
+  const content = document.getElementById('sidebar-content');
+  if (active) {
+    const n = NODES.find(nd => nd.id === id);
+    document.getElementById('s-name').textContent = n.name;
+    document.getElementById('s-year').textContent = n.year;
+    document.getElementById('s-body').textContent = n.body;
+    const ne = document.getElementById('s-note');
+    if (n.note) {
+      ne.textContent = n.note;
+      ne.style.display = 'block';
+      ne.style.background = n.noteCol + '18';
+      ne.style.color = n.noteCol;
+      ne.style.borderColor = n.noteCol;
+    } else {
+      ne.style.display = 'none';
+    }
+    document.getElementById('s-tags').innerHTML = n.tags.map(t =>
+      `<span class="tag" style="background:${n.col}15;color:${n.col};border-color:${n.col}55">${t}</span>`
+    ).join('');
+    empty.style.display = 'none';
+    content.classList.add('vis');
+  } else {
+    empty.style.display = 'block';
+    content.classList.remove('vis');
+  }
+  render();
+}
+
+function closeD() {
+  active = null;
+  document.getElementById('sidebar-empty').style.display = 'block';
+  document.getElementById('sidebar-content').classList.remove('vis');
+  render();
+}
+
+function setView(v, tab) {
+  currentView = v;
+  active = null;
+  document.getElementById('sidebar-empty').style.display = 'block';
+  document.getElementById('sidebar-content').classList.remove('vis');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  tab.classList.add('on');
+  render();
+}
+
+window.addEventListener('resize', () => { render(); });
+render();
+</script>
+</body>
+</html>
